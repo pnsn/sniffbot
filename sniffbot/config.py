@@ -10,6 +10,7 @@ class Config(object):
     EWORM_HOST = os.getenv('EWORM_HOST')
     EWORM_RING = os.getenv('EWORM_RING')
 
+
 class ProductionConfig(Config):
     DEBUG = False
 

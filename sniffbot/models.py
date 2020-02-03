@@ -1,5 +1,6 @@
 import subprocess
 import re
+import os
 
 '''Sniffwave output
 
@@ -46,7 +47,9 @@ class SniffWave():
 
     def build_call(self):
         return [
-            "ssh",
+            'ssh',
+            '-i',
+            os.getenv("SSH_I_FILE"),
             "{}@{}".format(self.eworm_user, self.eworm_host),
             "sniffwave",
             self.eworm_ring,
