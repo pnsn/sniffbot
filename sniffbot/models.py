@@ -66,7 +66,7 @@ class SniffWave():
 
         '''Since it is a subprocess, error handling must be managed
             through parsing stderr'''
-        if re.search(r'Connection refused', str(stderr)):
+        if re.search(r'Permission denied|Connection refused', str(stderr)):
             return "Connection to sniffwave server refused."
         return stdout.decode("utf-8")
 
