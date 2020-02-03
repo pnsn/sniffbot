@@ -1,3 +1,4 @@
+
 '''
 Where all the magic happens again, and again and again
 '''
@@ -15,6 +16,9 @@ DEFAULT_SECONDS = 5
 def create_app(env_name):
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
+    EWORM_HOST = app.config['EWORM_HOST']
+    EWORM_USER = app.config['EWORM_USER']
+    EWORM_RING = app.config['EWORM_RING']
 
     def help_message(message=None):
         return "Usage: \n Include station and seconds to query \
@@ -34,7 +38,8 @@ def create_app(env_name):
         net = request.args.get('net')
         loc = request.args.get('loc')
         sec = request.args.get('sec')
-        sn = SniffWave(sta, chan, net, loc, sec)
+        sn = SniffWave(EWORM_HOST, EWORM_USER, EWORM_RING,
+                       sta, chan, net, loc, sec)
         stdout = sn.call()
         print(stdout.split('\n'))
         return stdout
@@ -54,7 +59,8 @@ def create_app(env_name):
         except ValueError:
             sta = query[0].upper()
             sec = DEFAULT_SECONDS
-        sn = SniffWave(sta, None, None, None, sec)
+        sn = SniffWave(EWORM_HOST, EWORM_USER, EWORM_RING,
+                       sta, None, None, None, sec)
         stdout = sn.call()
         msg_short = sn.format_sms_response(stdout)
         return create_sms(msg_short)

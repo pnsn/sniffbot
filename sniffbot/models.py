@@ -1,6 +1,5 @@
 import subprocess
 import re
-import os
 
 '''Sniffwave output
 
@@ -29,15 +28,16 @@ F	 is the latency of feeding, that is the difference
 
 
 class SniffWave():
-    EWORM_RING = os.getenv('EWORM_RING')
-    EWORM_HOST = os.getenv('EWORM_HOST')
-    EWORM_USER = os.getenv('EWORM_USER')
 
     def is_wild(self, attr):
         '''default None to 'wild' '''
         return attr if attr is not None else 'wild'
 
-    def __init__(self, sta, chan, net, loc, sec=2):
+    def __init__(self, eworm_host, eworm_user, eworm_ring,
+                 sta, chan, net, loc, sec=2):
+        self.eworm_host = eworm_host
+        self.eworm_user = eworm_user
+        self.eworm_ring = eworm_ring
         self.sta = self.is_wild(sta)
         self.chan = self.is_wild(chan)
         self.net = self.is_wild(net)
@@ -47,9 +47,9 @@ class SniffWave():
     def build_call(self):
         return [
             "ssh",
-            "{}@{}".format(self.EWORM_USER, self.EWORM_HOST),
+            "{}@{}".format(self.eworm_user, self.eworm_host),
             "sniffwave",
-            self.EWORM_RING,
+            self.eworm_ring,
             self.sta,
             self.chan,
             self.net,
