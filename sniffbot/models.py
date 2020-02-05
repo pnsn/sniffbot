@@ -53,7 +53,7 @@ class SniffWave():
             unique_chan = {}
             # filter station name out
             regex = r'' + re.escape(self.sta) + \
-                        r'\.[a-zA-Z0-9]{3}\.[a-zA-Z0-9]{2}\..{2}'
+                    r'\.[a-zA-Z0-9]{3}\.[a-zA-Z0-9]{2}\..{2}'
             for line in sniffwave:
                 try:
                     m = re.match(regex, line[0])

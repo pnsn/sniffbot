@@ -29,7 +29,7 @@ def create_app(env_name):
 
     @app.route('/v1.0/sniffwave', methods=['GET'])
     def get_sniffwave():
-        sta = request.args.get('sta').uppper()
+        sta = request.args.get('sta').upper()
         sn = SniffWave(sta)
         response = sn.parse_log()
         return response
@@ -38,7 +38,7 @@ def create_app(env_name):
     def post_sniffwave():
         '''accept sms message
 
-            only need sta param and seconds
+            only need sta param and seconds:    
         '''
         body = request.form['Body']
         query = body.split()
