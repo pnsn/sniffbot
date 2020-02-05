@@ -16,3 +16,4 @@ __pycache__
 public/cache/*
 !public/cache/.gitkeep
 .vscode
+log

@@ -6,10 +6,7 @@ class Config(object):
     TESTING = False
     CSRF_ENABLED = True
     SECRET = os.getenv('SNIFFBOT_SECRET')
-    EWORM_USER = os.getenv('EWORM_USER')
-    EWORM_HOST = os.getenv('EWORM_HOST')
-    EWORM_RING = os.getenv('EWORM_RING')
-
+   
 
 class ProductionConfig(Config):
     DEBUG = False

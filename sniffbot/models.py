@@ -1,6 +1,6 @@
-import subprocess
-import re
 import os
+import csv
+import re
 
 '''Sniffwave output
 
@@ -30,93 +30,40 @@ F	 is the latency of feeding, that is the difference
 
 class SniffWave():
 
+    LOG_PATH = os.getenv("LOG_PATH")
+
     def is_wild(self, attr):
         '''default None to 'wild' '''
         return attr if attr is not None else 'wild'
 
-    def __init__(self, eworm_host, eworm_user, eworm_ring,
-                 sta, chan, net, loc, sec=2):
-        self.eworm_host = eworm_host
-        self.eworm_user = eworm_user
-        self.eworm_ring = eworm_ring
+    def __init__(self, sta):
         self.sta = self.is_wild(sta)
-        self.chan = self.is_wild(chan)
-        self.net = self.is_wild(net)
-        self.loc = self.is_wild(loc)
-        self.sec = sec
 
-    def build_call(self):
-        return [
-            'ssh',
-            '-i',
-            os.getenv("SSH_I_FILE"),
-            "{}@{}".format(self.eworm_user, self.eworm_host),
-            "sniffwave",
-            self.eworm_ring,
-            self.sta,
-            self.chan,
-            self.net,
-            self.loc,
-            str(self.sec)
-        ]
+    def parse_log(self):
+        ''' Log lines of form:
 
-    def call(self):
-        command = self.build_call()
-        print(command)
-        proc = subprocess.Popen(command,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-
-        '''Since it is a subprocess, error handling must be managed
-            through parsing stderr'''
-        if re.search(r'Permission denied|Connection refused', str(stderr)):
-            return "Connection to sniffwave server refused."
-        return stdout.decode("utf-8")
-
-    def format_sms_response(self, stdout):
-        '''shorten response for sms
-
-            turn into list broken on '\n'
-            pull out relative data, and join on \n
+        ['RCM.HHN.UW.-- 2020/02/05 07:18:00.30 752 [D: 1.2s F: 1.8s]']
         '''
-        resp_in = stdout.split("\n")
-        resp_out = []
-        for line in resp_in:
-            resp_out += self.parse_message(line.strip())
-        return '\n'.join(resp_out)
+        response = ''
+        full_path = os.path.join(os.path.dirname(__file__),
+                                 self.LOG_PATH)
+        with open(full_path) as csvfile:
+            sniffwave = csv.reader(csvfile)
+            # find all unique channels and keep the latest one
+            unique_chan = {}
+            # filter station name out
+            for line in sniffwave:
+                regex = r'' + re.escape(self.sta) + \
+                        r'\.[a-zA-Z0-9]{3}\.[a-zA-Z0-9]{2}\..{2}'
+                
+                m = re.match(regex, line[0])
+                if m:
+                    chan = m.group()
+                    unique_chan[chan] = line[0]
+                    
+                    '''overwrite each value assumes write in cron order'''
+                    # unique_chan[sniff] = sniff
 
-    def parse_message(self, line):
-        # 1st line
-
-        intro = re.search(r'Sniffing [A-Z]*_RING', line)
-        scnl = re.match(
-            r'[a-zA-Z0-9]{3,5}\.[a-zA-Z0-9]{3}\.[a-zA-Z0-9]{2}\..{2}', line)
-        if intro is not None:
-            # split string into 2
-            post = re.sub(intro.group(), '', line)
-            return [intro.group(), post]
-        if scnl is not None:
-            '''strip out interesting parts and turn into two lines'''
-            short = line.split()
-            list1 = [
-                short[0],
-                short[5],
-                short[6],
-                short[7],
-                short[8]
-            ]
-            list2 = [
-                short[10],
-                short[11],
-                short[-5],
-                short[-4],
-                short[-3],
-                short[-2],
-                short[-1]
-
-            ]
-            line1 = ' '.join(list1)
-            line2 = ' '.join(list2)
-            # indent the second line
-            return [line1, '\t' + line2]
-        return [re.sub(r'\s', '', line)]
+            for chan in unique_chan.values():
+                response += "".join(chan) + "\n"
+            return response

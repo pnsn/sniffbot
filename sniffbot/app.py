@@ -10,39 +10,29 @@ from twilio.twiml.messaging_response import (
     Message,
     Body
 )
-DEFAULT_SECONDS = 5
 
 
 def create_app(env_name):
     app = Flask(__name__)
     app.config.from_object(app_config[env_name])
-    EWORM_HOST = app.config['EWORM_HOST']
-    EWORM_USER = app.config['EWORM_USER']
-    EWORM_RING = app.config['EWORM_RING']
 
     def help_message(message=None):
         return "Usage: \n Include station and seconds to query \
             in the body\n STA 2"
 
-    def create_sms(msg_short):
+    def create_sms(msg):
         response = MessagingResponse()
         message = Message()
-        message.append(Body(msg_short))
-        print(msg_short)
+        message.append(Body(msg))
+        print(msg)
         return str(response.append(message))
 
     @app.route('/v1.0/sniffwave', methods=['GET'])
     def get_sniffwave():
         sta = request.args.get('sta')
-        chan = request.args.get('chan')
-        net = request.args.get('net')
-        loc = request.args.get('loc')
-        sec = request.args.get('sec')
-        sn = SniffWave(EWORM_HOST, EWORM_USER, EWORM_RING,
-                       sta, chan, net, loc, sec)
-        stdout = sn.call()
-        print(stdout.split('\n'))
-        return stdout
+        sn = SniffWave(sta)
+        response = sn.parse_log()
+        return response
 
     @app.route('/v1.0/sms/sniffwave', methods=['POST'])
     def post_sniffwave():
@@ -58,11 +48,10 @@ def create_app(env_name):
             sta, sec = query
         except ValueError:
             sta = query[0].upper()
-            sec = DEFAULT_SECONDS
-        sn = SniffWave(EWORM_HOST, EWORM_USER, EWORM_RING,
-                       sta, None, None, None, sec)
-        stdout = sn.call()
-        msg_short = sn.format_sms_response(stdout)
-        return create_sms(msg_short)
+        sn = SniffWave(sta)
+        msg = sn.parse_log()
+        response = create_sms(msg)
+
+        return response
 
     return app
