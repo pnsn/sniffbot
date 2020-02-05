@@ -30,7 +30,7 @@ F	 is the latency of feeding, that is the difference
 
 class SniffWave():
 
-    LOG_PATH = os.getenv("LOG_PATH")
+    LOG_PATH = os.getenv("SNIFF_LOG_PATH")
 
     def is_wild(self, attr):
         '''default None to 'wild' '''
@@ -52,17 +52,18 @@ class SniffWave():
             # find all unique channels and keep the latest one
             unique_chan = {}
             # filter station name out
-            for line in sniffwave:
-                regex = r'' + re.escape(self.sta) + \
+            regex = r'' + re.escape(self.sta) + \
                         r'\.[a-zA-Z0-9]{3}\.[a-zA-Z0-9]{2}\..{2}'
-                
-                m = re.match(regex, line[0])
-                if m:
+            for line in sniffwave:
+                try:
+                    m = re.match(regex, line[0])
                     chan = m.group()
-                    unique_chan[chan] = line[0]
-                    
-                    '''overwrite each value assumes write in cron order'''
-                    # unique_chan[sniff] = sniff
+                    if m:
+                        unique_chan[chan] = line[0]
+                except IndexError:
+                    pass
+                '''overwrite each value assumes write in cron order'''
+                # unique_chan[sniff] = sniff
 
             for chan in unique_chan.values():
                 response += "".join(chan) + "\n"

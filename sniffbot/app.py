@@ -29,7 +29,7 @@ def create_app(env_name):
 
     @app.route('/v1.0/sniffwave', methods=['GET'])
     def get_sniffwave():
-        sta = request.args.get('sta')
+        sta = request.args.get('sta').uppper()
         sn = SniffWave(sta)
         response = sn.parse_log()
         return response
@@ -44,10 +44,7 @@ def create_app(env_name):
         query = body.split()
         if not query:
             return help_message()
-        try:
-            sta, sec = query
-        except ValueError:
-            sta = query[0].upper()
+        sta = query[0].upper()
         sn = SniffWave(sta)
         msg = sn.parse_log()
         response = create_sms(msg)
