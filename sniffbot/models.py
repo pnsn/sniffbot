@@ -42,7 +42,6 @@ class SniffWave():
         self.sta = self.is_wild(sta)
         self.chan = self.is_wild(chan)
         self.net = self.is_wild(net)
-        self.loc = self.is_wild(loc)
         self.sec = sec
 
     def build_call(self):
@@ -56,7 +55,7 @@ class SniffWave():
             self.sta,
             self.chan,
             self.net,
-            self.loc,
+            "wild",
             str(self.sec)
         ]
 
