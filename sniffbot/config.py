@@ -9,6 +9,7 @@ class Config(object):
     EWORM_USER = os.getenv('EWORM_USER')
     EWORM_HOST = os.getenv('EWORM_HOST')
     EWORM_RING = os.getenv('EWORM_RING')
+    SSH_I_FILE = os.getenv('SSH_I_FILE')
 
 
 class ProductionConfig(Config):

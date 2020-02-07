@@ -20,6 +20,7 @@ def create_app(env_name):
     EWORM_HOST = app.config['EWORM_HOST']
     EWORM_USER = app.config['EWORM_USER']
     EWORM_RING = app.config['EWORM_RING']
+    SSH_I_FILE = app.config['SSH_I_FILE']
 
     def sanitize_scnl(value, min, max):
         '''ensure params are sanitized'''
@@ -48,15 +49,15 @@ def create_app(env_name):
             * sta (required)\n\
             * chan (optional)\n\
             * net (optional)\n\
-            * sec (optional, default 5)\n\
+            * sec (optional, default 5, max 10)\n\
         example: \n\
             /v1.0/sniffwave?sta=RCM&sec=3"
 
-    def create_sms(msg_short):
+    def create_sms(msg):
         response = MessagingResponse()
         message = Message()
-        message.append(Body(msg_short))
-        print(msg_short)
+        message.append(Body("\n" + msg))
+        print(msg)
         return str(response.append(message))
 
     @app.route('/v1.0/sniffwave', methods=['GET'])
@@ -66,9 +67,12 @@ def create_app(env_name):
             return help_message_http()
         chan = sanitize_scnl(request.args.get('chan'), 3, 3)
         net = sanitize_scnl(request.args.get('net'), 2, 2)
-        sec = sanitize_sec(request.args.get('sec'))
+        sec = request.args.get('sec')
+        if sec is not None:
+            sec = min(sec, 10)
+            sec = sanitize_sec(sec)
         sn = SniffWave(EWORM_HOST, EWORM_USER, EWORM_RING,
-                       sta, chan, net, sec)
+                       SSH_I_FILE, sta, chan, net, sec)
         stdout = sn.call()
         print(stdout.split('\n'))
         return stdout
@@ -88,11 +92,13 @@ def create_app(env_name):
         except ValueError:
             sec = str(DEFAULT_SECONDS)
         sta = sanitize_scnl(query[0].upper(), 3, 5)
-        sec = sanitize_sec(sec)
+        if sec is not None:
+            sec = min(int(sec), 10)
+            sec = sanitize_sec(sec)
         sn = SniffWave(EWORM_HOST, EWORM_USER, EWORM_RING,
-                       sta, None, None, sec)
+                       SSH_I_FILE, sta, None, None, sec)
         stdout = sn.call()
-        msg_short = sn.format_sms_response(stdout)
-        return create_sms(msg_short)
+        msg = sn.format_sms_response(stdout)
+        return create_sms(msg)
 
     return app

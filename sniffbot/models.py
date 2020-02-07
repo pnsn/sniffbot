@@ -34,11 +34,12 @@ class SniffWave():
         '''default None to 'wild' '''
         return attr if attr is not None else 'wild'
 
-    def __init__(self, eworm_host, eworm_user, eworm_ring,
+    def __init__(self, eworm_host, eworm_user, eworm_ring, ssh_i_file,
                  sta, chan, net, loc, sec=2):
         self.eworm_host = eworm_host
         self.eworm_user = eworm_user
         self.eworm_ring = eworm_ring
+        self.ssh_i_file = ssh_i_file
         self.sta = self.is_wild(sta)
         self.chan = self.is_wild(chan)
         self.net = self.is_wild(net)
@@ -48,7 +49,7 @@ class SniffWave():
         return [
             'ssh',
             '-i',
-            os.getenv("SSH_I_FILE"),
+            self.ssh_i_file,
             "{}@{}".format(self.eworm_user, self.eworm_host),
             "sniffwave",
             self.eworm_ring,
