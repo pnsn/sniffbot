@@ -119,4 +119,4 @@ class SniffWave():
             line2 = ' '.join(list2)
             # indent the second line
             return [line1, '\t' + line2]
-        return [re.sub(r'\s', '', line)]
+        return [re.sub(r'\t', '', line)]
