@@ -7,7 +7,8 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET = os.getenv('SNIFFBOT_SECRET')
     EWORM_USER = os.getenv('EWORM_USER')
-    EWORM_HOST = os.getenv('EWORM_HOST')
+    EWORM_HOST_STAGING = os.getenv('EWORM_HOST_STAGING')
+    EWORM_HOST_PRODUCTION = os.getenv('EWORM_HOST_PRODUCTION')
     EWORM_RING = os.getenv('EWORM_RING')
     SSH_I_FILE = os.getenv('SSH_I_FILE')
 

@@ -1,6 +1,5 @@
 import subprocess
 import re
-import os
 
 '''Sniffwave output
 
@@ -71,7 +70,7 @@ class SniffWave():
             through parsing stderr'''
         if re.search(r'Permission denied|Connection refused', str(stderr)):
             return "Connection to sniffwave server refused."
-        return stdout.decode("utf-8")
+        return self.eworm_host + " " + stdout.decode("utf-8")
 
     def format_sms_response(self, stdout):
         '''shorten response for sms
