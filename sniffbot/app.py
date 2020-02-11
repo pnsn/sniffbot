@@ -24,7 +24,6 @@ def create_app(env_name):
     SSH_I_FILE = app.config['SSH_I_FILE']
 
     def get_sniffwave(host):
-        print(EWORM_HOST_PRODUCTION)
         '''http route for staging and production '''
         sta = sanitize_scnl(request.args.get('sta'), 3, 5, 'HTTP')
         if len(request.args) < 1 or sta is None:
@@ -35,7 +34,6 @@ def create_app(env_name):
         if sec is not None:
             sec = min(int(sec), 10)
             sec = sanitize_sec(sec, 'HTTP')
-        print("yeeeee")
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, chan, net, sec)
         stdout = sn.call()
@@ -77,7 +75,7 @@ def create_app(env_name):
     def sanitize_sec(sec, protocol):
         '''ensure numeric'''
         if sec is not None:
-            m = re.match(r'\d', str(sec))
+            m = re.match(r'\d{0,3}', str(sec))
             if m:
                 return m.group()
             if protocol == 'SMS':

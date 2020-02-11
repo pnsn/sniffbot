@@ -34,7 +34,7 @@ class SniffWave():
         return attr if attr is not None else 'wild'
 
     def __init__(self, eworm_host, eworm_user, eworm_ring, ssh_i_file,
-                 sta, chan, net, loc, sec=2):
+                 sta, chan, net, sec):
         self.eworm_host = eworm_host
         self.eworm_user = eworm_user
         self.eworm_ring = eworm_ring
@@ -42,7 +42,7 @@ class SniffWave():
         self.sta = self.is_wild(sta)
         self.chan = self.is_wild(chan)
         self.net = self.is_wild(net)
-        self.sec = sec
+        self.sec = sec if sec is not None else 5
 
     def build_call(self):
         return [
