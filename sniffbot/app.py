@@ -33,8 +33,11 @@ def create_app(env_name):
         net = sanitize_scnl(request.args.get('net'), 2, 2, 'HTTP')
         sec = request.args.get('sec')
         if sec is not None:
-            sec = min(int(sec), MAX_SECONDS)
-            sec = sanitize_sec(sec, 'HTTP')
+            try:
+                sec = min(int(sec), MAX_SECONDS)
+                sec = sanitize_sec(sec, 'HTTP')
+            except ValueError:
+                sec = DEFAULT_SECONDS
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, chan, net, sec)
         stdout = sn.call()
@@ -53,8 +56,11 @@ def create_app(env_name):
             sec = str(DEFAULT_SECONDS)
         sta = sanitize_scnl(query[0].upper(), 3, 5, "SMS")
         if sec is not None:
-            sec = min(int(sec), MAX_SECONDS)
-            sec = sanitize_sec(sec, "SMS")
+            try:
+                sec = min(int(sec), MAX_SECONDS)
+                sec = sanitize_sec(sec, "SMS")
+            except ValueError:
+                sec = DEFAULT_SECONDS
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, None, None, sec)
         stdout = sn.call()
