@@ -11,7 +11,8 @@ from twilio.twiml.messaging_response import (
 )
 import re
 
-DEFAULT_SECONDS = 5
+MAX_SECONDS = 5
+DEFAULT_SECONDS = 3
 
 
 def create_app(env_name):
@@ -32,7 +33,7 @@ def create_app(env_name):
         net = sanitize_scnl(request.args.get('net'), 2, 2, 'HTTP')
         sec = request.args.get('sec')
         if sec is not None:
-            sec = min(int(sec), 10)
+            sec = min(int(sec), MAX_SECONDS)
             sec = sanitize_sec(sec, 'HTTP')
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, chan, net, sec)
@@ -52,7 +53,7 @@ def create_app(env_name):
             sec = str(DEFAULT_SECONDS)
         sta = sanitize_scnl(query[0].upper(), 3, 5, "SMS")
         if sec is not None:
-            sec = min(int(sec), 10)
+            sec = min(int(sec), MAX_SECONDS)
             sec = sanitize_sec(sec, "SMS")
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, None, None, sec)
