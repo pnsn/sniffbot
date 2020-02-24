@@ -45,7 +45,7 @@ def create_app(env_name):
         return stdout
 
     def post_sniffwave(host):
-        '''route for sms for staging and production'''
+        '''sms route for staging and production'''
         body = request.form['Body']
         query = body.split()
         if not query:
@@ -68,7 +68,15 @@ def create_app(env_name):
         return create_sms(msg)
 
     def sanitize_scnl(value, min, max, protocol):
-        '''ensure params are sanitized'''
+        ''' All protocols:
+
+            ensure params are sanitized before making system call
+                * value: param to be evaled
+                * min: min chars required
+                * max: max chars allowed
+                * protocol: SMS or HTTP
+
+        '''
         if value:
             regex = re.compile(
                 r'[a-zA-Z0-9]{' + str(min) + "," + str(max) + "}")
@@ -80,7 +88,7 @@ def create_app(env_name):
             return help_message_http()
 
     def sanitize_sec(sec, protocol):
-        '''ensure numeric'''
+        '''ensure second param is numeric'''
         if sec is not None:
             m = re.match(r'\d{0,3}', str(sec))
             if m:

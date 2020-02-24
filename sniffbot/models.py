@@ -30,7 +30,7 @@ F	 is the latency of feeding, that is the difference
 class SniffWave():
 
     def is_wild(self, attr):
-        '''default None to 'wild' '''
+        ''' default None to 'wild' for init '''
         return attr if attr is not None else 'wild'
 
     def __init__(self, eworm_host, eworm_user, eworm_ring, ssh_i_file,
@@ -45,6 +45,7 @@ class SniffWave():
         self.sec = sec if sec is not None else 5
 
     def build_call(self):
+        '''build ssh call to host'''
         return [
             'ssh',
             '-i',
@@ -60,6 +61,7 @@ class SniffWave():
         ]
 
     def call(self):
+        '''execute call to host server'''
         command = self.build_call()
         print(command)
         proc = subprocess.Popen(command,
@@ -85,9 +87,10 @@ class SniffWave():
         return '\n'.join(resp_out)
 
     def parse_message(self, line):
-        # 1st line
-
+        '''take text repsonse from sniffwave and parse'''
+        # intro line
         intro = re.search(r'Sniffing [A-Z]*_RING', line)
+        # scnl line
         scnl = re.match(
             r'[a-zA-Z0-9]{3,5}\.[a-zA-Z0-9]{3}\.[a-zA-Z0-9]{2}\..{2}', line)
         if intro is not None:
