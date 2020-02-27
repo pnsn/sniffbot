@@ -59,13 +59,13 @@ def create_app(env_name):
             body = request.form['Body']
             query = body.split()
         except KeyError:
-            return help_message_sms()
+            return create_sms(help_message_sms()[:MAX_SMS_LENGTH])
         if not query:
-            return help_message_sms()
+            return create_sms(help_message_sms()[:MAX_SMS_LENGTH])
         try:
             sta = sanitize_scnl(query[0].upper(), 3, 5, "SMS")
         except ValueError as e:
-            return str(e)
+            return create_sms(str(e)[:MAX_SMS_LENGTH])
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, None, None, SMS_SECONDS)
 
@@ -104,19 +104,22 @@ def create_app(env_name):
             return help_message_http()
 
     def help_message_sms():
-        return "Usage: \n Include station name\
-        in the SMS body \n\
-        * sta (required, case insensitive, 3-5 chars)"
+        return """Usage:
+        Include station name
+        in the SMS body
+        * sta (required)
+             case insensitive, 3-5 chars)"""
 
     def help_message_http():
-        return "Usage: \n Include station name in request (case insensitive) \n\
-        * sta (required)\n\
-        * chan (optional)\n\
-        * net (optional)\n\
-        * sec (optional, default 5, max 10)\n\
-        example: \n\
-        /v1.0/sniffwave?sta=RCM&sec=3 \
-        /v1.0/sniffwave?sta=RCM"
+        return """Usage:
+        Include station name in request (case insensitive)
+         * sta (required)
+         * chan (optional)
+         * net (optional)
+         * sec (optional, default 5, max 10)
+        example:
+        /v1.0/sniffwave?sta=RCM&sec=3 
+        /v1.0/sniffwave?sta=RCM"""
 
     def create_sms(msg):
         response = MessagingResponse()
