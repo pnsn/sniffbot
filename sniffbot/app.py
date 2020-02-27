@@ -11,8 +11,13 @@ from twilio.twiml.messaging_response import (
 )
 import re
 
-MAX_SECONDS = 5
-DEFAULT_SECONDS = 3
+SMS_SECONDS = 10
+'''Twilio max SMS length is 1600 chars
+     which is 10 X 160 char segments
+     only allow 9 segemnts'''
+MAX_SMS_LENGTH = 1440
+MAX_HTTP_SECONDS = 10
+DEFAULT_HTTP_SECONDS = 3
 
 
 def create_app(env_name):
@@ -26,7 +31,10 @@ def create_app(env_name):
 
     def get_sniffwave(host):
         '''http route for staging and production '''
-        sta = sanitize_scnl(request.args.get('sta'), 3, 5, 'HTTP')
+        try:
+            sta = sanitize_scnl(request.args.get('sta'), 3, 5, 'HTTP')
+        except (KeyError, ValueError):
+            return help_message_http()
         if len(request.args) < 1 or sta is None:
             return help_message_http()
         chan = sanitize_scnl(request.args.get('chan'), 3, 3, 'HTTP')
@@ -34,38 +42,36 @@ def create_app(env_name):
         sec = request.args.get('sec')
         if sec is not None:
             try:
-                sec = min(int(sec), MAX_SECONDS)
+                sec = min(int(sec), MAX_HTTP_SECONDS)
                 sec = sanitize_sec(sec, 'HTTP')
             except ValueError:
-                sec = DEFAULT_SECONDS
+                sec = DEFAULT_HTTP_SECONDS
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
                        SSH_I_FILE, sta, chan, net, sec)
         stdout = sn.call()
-        print(stdout.split('\n'))
         return stdout
 
     def post_sniffwave(host):
-        '''sms route for staging and production'''
-        body = request.form['Body']
-        query = body.split()
+        '''sms route for staging and production
+            For sms query for 10 seconds
+        '''
+        try:
+            body = request.form['Body']
+            query = body.split()
+        except KeyError:
+            return help_message_sms()
         if not query:
             return help_message_sms()
         try:
-            sta, sec = query
-        except ValueError:
-            sec = str(DEFAULT_SECONDS)
-        sta = sanitize_scnl(query[0].upper(), 3, 5, "SMS")
-        if sec is not None:
-            try:
-                sec = min(int(sec), MAX_SECONDS)
-                sec = sanitize_sec(sec, "SMS")
-            except ValueError:
-                sec = DEFAULT_SECONDS
+            sta = sanitize_scnl(query[0].upper(), 3, 5, "SMS")
+        except ValueError as e:
+            return str(e)
         sn = SniffWave(host, EWORM_USER, EWORM_RING,
-                       SSH_I_FILE, sta, None, None, sec)
+                       SSH_I_FILE, sta, None, None, SMS_SECONDS)
+
         stdout = sn.call()
         msg = sn.format_sms_response(stdout)
-        return create_sms(msg)
+        return create_sms(msg[:MAX_SMS_LENGTH])
 
     def sanitize_scnl(value, min, max, protocol):
         ''' All protocols:
@@ -84,8 +90,8 @@ def create_app(env_name):
             if m:
                 return m.group().upper()
             if protocol == 'SMS':
-                return help_message_sms()
-            return help_message_http()
+                raise ValueError(help_message_sms())
+            raise ValueError(help_message_http())
 
     def sanitize_sec(sec, protocol):
         '''ensure second param is numeric'''
@@ -98,23 +104,19 @@ def create_app(env_name):
             return help_message_http()
 
     def help_message_sms():
-        return "Usage: \n Include station and seconds to query\n \
-            in the body\n  \
-            * sta (required, case insensitive)\n \
-            * sec (optional, default 5, max 10)\n \
-        example: \n \
-            RCM 2 \n \
-            RCM"
+        return "Usage: \n Include station name\
+        in the SMS body \n\
+        * sta (required, case insensitive, 3-5 chars)"
 
     def help_message_http():
         return "Usage: \n Include station name in request (case insensitive) \n\
-            * sta (required)\n\
-            * chan (optional)\n\
-            * net (optional)\n\
-            * sec (optional, default 5, max 10)\n\
+        * sta (required)\n\
+        * chan (optional)\n\
+        * net (optional)\n\
+        * sec (optional, default 5, max 10)\n\
         example: \n\
-            /v1.0/sniffwave?sta=RCM&sec=3 \
-            /v1.0/sniffwave?sta=RCM"
+        /v1.0/sniffwave?sta=RCM&sec=3 \
+        /v1.0/sniffwave?sta=RCM"
 
     def create_sms(msg):
         response = MessagingResponse()
@@ -131,7 +133,8 @@ def create_app(env_name):
     @app.route('/v1.0/staging/sniffwave', methods=['GET'])
     def get_sniffwave_staging():
         return get_sniffwave(EWORM_HOST_STAGING)
-
+    # test with curl
+    # :curl -d 'Body=OSD'  http://localhost:5000/v1.0/sms/sniffwave
     @app.route('/v1.0/sms/sniffwave', methods=['POST'])
     def post_sniffwave_production():
         '''accept sms message only need sta param and seconds'''

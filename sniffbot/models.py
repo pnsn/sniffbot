@@ -63,7 +63,7 @@ class SniffWave():
     def call(self):
         '''execute call to host server'''
         command = self.build_call()
-        print(command)
+        print("command = {}".format(command))
         proc = subprocess.Popen(command,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
@@ -81,12 +81,31 @@ class SniffWave():
             pull out relative data, and join on \n
         '''
         resp_in = stdout.split("\n")
-        resp_out = []
+        # for unique channels, saves latest
+        unique_chan = {}
+        intro = ""
+        # summary is multi line
+        summary = []
         for line in resp_in:
-            resp_out += self.parse_message(line.strip())
+            line = line.strip()
+            key, val = self.parse_sms_line(line)
+            if key == "intro":
+                intro = val
+            elif key == 'summary':
+                # append summary since it is mulitple lines
+                summary += val
+            else:
+                # keep overwritting
+                unique_chan[key] = val
+
+        # build list, then split it on '\n'
+        resp_out = intro
+        for l in unique_chan.values():
+            resp_out += l
+        resp_out += summary
         return '\n'.join(resp_out)
 
-    def parse_message(self, line):
+    def parse_sms_line(self, line):
         '''take text repsonse from sniffwave and parse'''
         # intro line
         intro = re.search(r'Sniffing [A-Z]*_RING', line)
@@ -96,7 +115,7 @@ class SniffWave():
         if intro is not None:
             # split string into 2
             post = re.sub(intro.group(), '', line)
-            return [intro.group(), post]
+            return 'intro', [intro.group(), post]
         if scnl is not None:
             '''strip out interesting parts and turn into two lines'''
             short = line.split()
@@ -120,5 +139,5 @@ class SniffWave():
             line1 = ' '.join(list1)
             line2 = ' '.join(list2)
             # indent the second line
-            return [line1, '\t' + line2]
-        return [re.sub(r'\t', '', line)]
+            return scnl.group(), [line1, '\t' + line2]
+        return 'summary', [re.sub(r'\t', '', line)]
